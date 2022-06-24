@@ -1,0 +1,16 @@
+
+# Editors
+.idea/
+.charm/
+.vscode/
+
+# MacOS
+.DS_STORE
+
+# pyenv
+.python-version
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
