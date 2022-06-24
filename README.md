@@ -8,6 +8,19 @@ however you want. Just don't commit to master. Or do. I don't care.
 Use branches and leave them open when demoing a new concept
 
 
+### Use:
+
+Build docker image:
+```
+$ > docker build -t flask-docker-sandbox:latest .
+```
+
+And run:
+```
+$ > docker run -p 5000:5000 flask-docker-sandbox
+```
+
+
 ### TODO:
 
 - Add compose file to orchestrate additional microservices
