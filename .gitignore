@@ -4,6 +4,9 @@
 .charm/
 .vscode/
 
+# Environment
+.env
+
 # MacOS
 .DS_STORE
 
