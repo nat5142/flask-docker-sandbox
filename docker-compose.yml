@@ -1,0 +1,14 @@
+
+version: '3.7'
+
+
+services:
+
+  server:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - '5000:5000'
+    working_dir: /app
+    command: gunicorn -b :5000 --access-logfile - --error-logfile - app:app
