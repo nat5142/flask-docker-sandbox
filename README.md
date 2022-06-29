@@ -21,6 +21,9 @@ $ > docker run -p 5000:5000 flask-docker-sandbox
 ```
 
 
+Config settings stored in `src/config_local.py`. To be overridden later.
+
+
 ### TODO:
 
 - Add compose file to orchestrate additional microservices
