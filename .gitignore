@@ -10,6 +10,9 @@
 # MacOS
 .DS_STORE
 
+# Local config
+src/config_local.py
+
 # pyenv
 .python-version
 
