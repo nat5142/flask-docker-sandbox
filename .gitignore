@@ -13,8 +13,6 @@ src/config_local.py
 # MacOS
 .DS_STORE
 
-tmp/
-
 # pyenv
 .python-version
 
