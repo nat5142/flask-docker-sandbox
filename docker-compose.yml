@@ -6,9 +6,22 @@ services:
 
   server:
     build: .
+    depends_on:
+      - db
     env_file:
       - .env
     ports:
       - '5000:5000'
     working_dir: /app
-    command: gunicorn -b :5000 --access-logfile - --error-logfile - app:app
+#    command: gunicorn -b :5000 --access-logfile - --error-logfile - app:app
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=flask_docker_sandbox
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'

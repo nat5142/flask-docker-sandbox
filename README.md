@@ -21,7 +21,17 @@ $ > docker run -p 5000:5000 flask-docker-sandbox
 ```
 
 
-Config settings stored in `src/config_local.py`. To be overridden later.
+Config settings stored in `src/config_local.py`. Create a `SECRET_KEY` value in this file before running. Ex:
+
+```
+>>> import os
+>>> os.urandom(16).hex()
+```
+
+
+# Database:
+
+Default installation is Postgres.
 
 
 ### TODO:

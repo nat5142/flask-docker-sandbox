@@ -7,6 +7,9 @@
 # Environment
 .env
 
+# PostgreSQL local data store
+pgdata/
+
 # Local config
 src/config_local.py
 

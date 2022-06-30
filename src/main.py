@@ -8,12 +8,15 @@ from src.db import db, init_db
 migrate = Migrate()
 
 
-def create_app(config_filename='config_local.py'):
+def create_app(config_filename='config.py'):
     app = Flask(__name__)
 
-    if os.path.isfile(os.path.join('src', config_filename)):
-        # Load local config file
-        app.config.from_pyfile(config_filename)
+    # Load basic config. TODO: replace with remote credentials service later.
+    app.config.from_pyfile(config_filename)
+
+    # Load local overrides from config_local file
+    if os.path.isfile(os.path.join('src', 'config_local.py')):
+        app.config.from_pyfile('config_local.py')
 
     # Flask-SQLAlchemy
     init_db(app)
