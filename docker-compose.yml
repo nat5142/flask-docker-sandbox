@@ -5,6 +5,7 @@ version: '3.7'
 services:
 
   server:
+    image: flask_docker_sandbox
     build: .
     depends_on:
       - db
@@ -13,7 +14,6 @@ services:
     ports:
       - '5000:5000'
     working_dir: /app
-#    command: gunicorn -b :5000 --access-logfile - --error-logfile - app:app
 
   db:
     image: postgres
@@ -25,3 +25,44 @@ services:
       - ./pgdata:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+
+  rabbitmq:
+    image: rabbitmq
+
+  celery:
+    image: flask_docker_sandbox
+    depends_on:
+      - server
+      - rabbitmq
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=postgresql://postgres:postgres@db:5432/flask_docker_sandbox
+    volumes:
+      - .:/code
+    command: 'celery worker -A src.celery_app:app'
+
+  flower:
+    build: .
+    depends_on:
+      - server
+      - celery
+      - rabbitmq
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=postgresql://postgres:postgres@db:5432/flask_docker_sandbox
+    volumes:
+      - .:/code
+    ports:
+      - '5555:5555'
+    command: 'celery -A src.celery_app:app flower --url-prefix=flower --port=5000'
+
+  celery-beat:
+    build: .
+    depends_on:
+      - server
+      - celery
+      - rabbitmq
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=postgresql://postgres:postgres@db:5432/flask_docker_sandbox
+    command: 'celery -A src.celery_app:app beat'
