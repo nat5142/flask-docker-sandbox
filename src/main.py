@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask_migrate import Migrate
 
+from src.blueprints import register_blueprints
 from src.db import db, init_db
 
 migrate = Migrate()
@@ -23,5 +24,8 @@ def create_app(config_filename='config.py'):
 
     # Flask-Migrate
     migrate.init_app(app, db)
+
+    # Register Blueprints
+    register_blueprints(flask_app=app)
 
     return app
