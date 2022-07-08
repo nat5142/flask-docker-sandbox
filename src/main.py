@@ -6,7 +6,8 @@ from flask_login import LoginManager
 
 from src.blueprints import register_blueprints
 from src.db import db, init_db
-from src.models.user import User
+from src.jinja import register_jinja
+from src.models.user import Users
 
 migrate = Migrate()
 
@@ -28,7 +29,10 @@ def create_app(config_filename='config.py'):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return Users.query.get(int(user_id))
+
+    # Jinja
+    register_jinja(app)
 
     # Flask-SQLAlchemy
     init_db(app)
