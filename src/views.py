@@ -76,7 +76,7 @@ def register():
             user.set_password(form.password.data)
             user.save()
             flash('Success!')
-        return redirect('main.login')  # always return to login screen after invalid submit
+        return redirect(url_for('main.login'))  # always return to login screen after invalid submit
     
     return render_template('register.html', title='Register', form=form)
 
