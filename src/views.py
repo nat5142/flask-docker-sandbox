@@ -1,15 +1,23 @@
 from flask import current_app, jsonify, render_template, redirect, flash, url_for, request, abort
 from flask.blueprints import Blueprint
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, login_required, logout_user
+from flask_mail import Message
 from urllib.parse import urlparse, urljoin
 
 from src.db import db
-from src.forms import LoginForm, RegisterForm
+from src.forms import LoginForm, RegisterForm, TriggerPasswordResetForm, PasswordResetForm
+from src.mail import send_email
 from src.models import Users, TestTable
+from src.tokens import generate_token, confirm_token
 
 
 # plays very nicely with the app factory model. add `url_prefix=` argument for `/main/ping/` etc.
 main = Blueprint('main', __name__)
+
+
+@main.route('/')
+def index():
+    return redirect(url_for('main.hello'))
 
 
 @main.route('/ping/')
@@ -31,6 +39,7 @@ def test_table():
 
 
 @main.route('/users/')
+@login_required
 def users():
     query = db.session.query(Users)
     rows = [x.as_dict() for x in query.all()] or []
@@ -55,7 +64,7 @@ def login():
         if not is_safe_url(next_page):
             return abort(400)
         
-        return redirect(url_for('main.ping'))
+        return redirect(url_for('main.hello'))
     
     return render_template('login.html', title='Log In', form=form)
 
@@ -75,14 +84,111 @@ def register():
             user = Users(email=form.email.data, username=form.username.data)
             user.set_password(form.password.data)
             user.save()
-            flash('Success!')
-        return redirect(url_for('main.login'))  # always return to login screen after invalid submit
+
+            token = generate_token(user.email, salt_key='SECURITY_PASSWORD_SALT')
+            confirm_url = url_for('main.confirm_email_verify_token', token=token, _external=True)
+            html = render_template('email/verify.html', confirm_url=confirm_url)
+            subject = 'Please confirm your email for flask-docker-sandbox'
+            
+            message = Message(
+                subject=subject,
+                recipients=[user.email],
+                sender=('flask-docker-sandbox', 'noreply@flask-docker-sandbox.com'),
+                html=html
+            )
+
+            send_email(message)
+
+            return redirect(url_for('main.verify_email'))
     
     return render_template('register.html', title='Register', form=form)
 
 
-# TODO: Implement password reset
+@main.route('/verify-email/', methods=['GET', 'POST'])
+def verify_email():
+    return render_template('verify_email.html')
+
+
+@main.route('/confirm/<token>', methods=['GET'])
+def confirm_email_verify_token(token):
+    try:
+        email = confirm_token(token, salt_key='SECURITY_PASSWORD_SALT')
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+        abort(404)
+    else:
+        user = Users.query.filter_by(email=email).first_or_404()
+        if user.email_verified:
+            flash('Account already confirmed. Please log in.', 'success')
+        else:
+            user.email_verified = True
+            user.save()
+            return render_template('email_verified.html')
+
+        return redirect(url_for('main.login'))          
+
+
+@main.route('/send-reset-password-email/', methods=['GET', 'POST'])
+def password_reset_email():
+    if current_user.is_authenticated:
+        return redirect(url_for('/'))
+    form = TriggerPasswordResetForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(email=form.email.data).first()
+        if user:
+            token = generate_token(user.email, 'PASSWORD_RESET_SALT')
+            reset_password_url = url_for('main.reset_password', token=token, _external=True)
+            html = render_template('email/reset_password_email.html', reset_password_url=reset_password_url)
+            subject = 'Reset your flask-docker-sandbox password.'
+
+            msg = Message(
+                subject=subject,
+                recipients=[user.email],
+                sender=('flask-docker-sandbox', 'noreply@flask-docker-sandbox.com'),
+                html=html
+            )
+
+            send_email(msg)
+
+            flash('Check your email inbox for instructions to reset your password.')
+            return redirect(url_for('main.login'))
+        else:
+            flash('We don\'t have an account with this email.')
     
+    return render_template('request_password_reset.html', title='Reset Password', form=form)
+    
+
+@main.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = confirm_token(token, salt_key='PASSWORD_RESET_SALT')
+    except:
+        flash('This password reset link is invalid or has expired.', 'danger')
+        abort(404)
+    else:
+        form = PasswordResetForm()
+        if form.validate_on_submit():
+            if email != form.email.data:
+                flash('Who are you?')
+                abort(403)
+            user = Users.query.filter_by(email=email).first_or_404()
+            user.set_password(form.password.data)
+            user.save()
+            if user.email_verified:
+                flash('Password successfully reset.', 'success')
+                return render_template('password_reset_success.html')
+            else:
+                flash('Your email is still unverified. Fix that.', 'danger')
+                return redirect(url_for('main.verify_email'))
+
+        return render_template('reset_password.html', form=form)
+
+
+@main.route('/logout/', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('main.login'))
 
 
 def is_safe_url(target):

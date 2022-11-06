@@ -9,4 +9,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT ["./boot.sh"]
+CMD ["gunicorn", "-b", ":5000", "--workers", "1", "--threads", "4", "--log-level", "warning", "--access-logfile", "-", "--error-logfile", "-", "app:app"]

@@ -1,0 +1,5 @@
+{% extends "unauthenticated_base.html" %}
+
+{% block content %}
+  <p>Thank you for verifying! Please <a href="{{ url_for('main.login') }}">click here</a> to return to the login screen.</p>
+{% endblock %}
