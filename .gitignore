@@ -7,8 +7,12 @@
 # Environment
 .env
 
-# PostgreSQL local data store
+# Volumes
 pgdata/
+
+# MacOS
+.DS_STORE
+>>>>>>> master
 
 # Local config
 src/config_local.py
