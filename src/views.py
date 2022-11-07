@@ -1,5 +1,7 @@
-from flask import Blueprint
+from flask import Blueprint, request
 from flask.views import MethodView
+
+from src.jsend import api_success, api_error, api_fail
 
 
 api_blueprint = Blueprint('api', __name__, url_prefix='/api/v1')
@@ -13,13 +15,14 @@ def ping():
 class ExampleAPI(MethodView):
 
     def get(self, sample_data=None):
-        if sample_data is None:
-            return 'get response', 200
-        else:
-            return 'Input data: {}'.format(sample_data), 200
+        ret = {'path_variable': None, 'query': request.args.to_dict()}
+        if sample_data is not None:
+            ret['path_variable'] = sample_data
+
+        return api_success(data=ret)
 
     def post(self):
-        return 'post response', 200
+        return api_success(data={'message': 'post response'})
 
 
 example_view = ExampleAPI.as_view('example')
