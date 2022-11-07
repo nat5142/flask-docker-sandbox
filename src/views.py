@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app
 from flask.views import MethodView
 
 from src.jsend import api_success, api_error, api_fail
@@ -22,7 +22,16 @@ class ExampleAPI(MethodView):
         return api_success(data=ret)
 
     def post(self):
-        return api_success(data={'message': 'post response'})
+        try:
+            request_json = request.get_json(force=True)
+        except Exception as exc:
+            current_app.logger.debug(exc)
+            return api_fail(data={'messages': 'Error parsing request body.'})
+        else:
+            if not request_json:
+                return api_fail(data={'messages': 'Please send request body as JSON.'})
+            else:
+                return api_success(data={'request': {'body': request.get_json(force=True)}})
 
 
 example_view = ExampleAPI.as_view('example')
