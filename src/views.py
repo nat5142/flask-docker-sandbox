@@ -15,23 +15,29 @@ def ping():
 class ExampleAPI(MethodView):
 
     def get(self, sample_data=None):
-        ret = {'path_variable': None, 'query': request.args.to_dict()}
-        if sample_data is not None:
-            ret['path_variable'] = sample_data
+        try:
+            ret = {'path_variable': None, 'query': request.args.to_dict()}
+            if sample_data is not None:
+                ret['path_variable'] = sample_data
 
-        return api_success(data=ret)
+            return api_success(data=ret)
+        except Exception as exc:
+            return api_error(exc.args[0])
 
     def post(self):
         try:
-            request_json = request.get_json(force=True)
-        except Exception as exc:
-            current_app.logger.debug(exc)
-            return api_fail(data={'messages': 'Error parsing request body.'})
-        else:
-            if not request_json:
-                return api_fail(data={'messages': 'Please send request body as JSON.'})
+            try:
+                request_json = request.get_json(force=True)
+            except Exception as exc:
+                current_app.logger.debug(exc)
+                return api_fail(data={'messages': 'Error parsing request body.'})
             else:
-                return api_success(data={'request': {'body': request.get_json(force=True)}})
+                if not request_json:
+                    return api_fail(data={'messages': 'Please send request body as JSON.'})
+                else:
+                    return api_success(data={'request': {'body': request.get_json(force=True)}})
+        except Exception as exc:
+            return api_error(exc.args[0])
 
 
 example_view = ExampleAPI.as_view('example')
