@@ -12,9 +12,13 @@ pgdata/
 
 # MacOS
 .DS_STORE
+>>>>>>> master
 
 # Local config
 src/config_local.py
+
+# MacOS
+.DS_STORE
 
 # pyenv
 .python-version

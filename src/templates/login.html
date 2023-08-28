@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+  <h1>Sign In</h1>
+  <form action="" method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <p>
+      {{ form.email.label }}
+      {{ form.email(size=32) }}
+    </p>
+    <p>
+      {{ form.password.label }}
+      {{ form.password(size=32) }}
+    </p>
+    <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+    <p>{{ form.submit() }}</p>
+  </form>
+  <button id="register-button" class="float-left submit-button">Register</button>
+    <hr/>
+  <div class="col-4">
+    <p>Forgot your password? <a href="/send-reset-password-email/">Click here.</a></p>
+  </div>
+{% endblock %}
+
+
+{% block js %}
+  <script type="text/javascript">
+    document.getElementById('register-button').onclick = function () {
+        location.href = "{{ url_for('main.register') }}"
+    }
+  </script>
+{% endblock %}

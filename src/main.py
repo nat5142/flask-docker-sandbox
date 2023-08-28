@@ -1,17 +1,52 @@
 import os
 
 from flask import Flask
+from flask_login import LoginManager
+from flask_migrate import Migrate
 
 from src.blueprints import register_blueprints
+from src.db import db, init_db
+from src.jinja import register_jinja
+from src.mail import mail
+from src.models.user import Users
+
+migrate = Migrate()
 
 
-def create_app(config_filename='config_local.py'):
+def create_app(config_filename='config.py'):
     app = Flask(__name__)
 
-    # Register blueprints
-    register_blueprints(app)
-
     if os.path.isfile(os.path.join('src', config_filename)):
+        # Load basic config. TODO: replace with remote credentials service later.
         app.config.from_pyfile(config_filename)
+
+    # Load local overrides from config_local file
+    if os.path.isfile(os.path.join('src', 'config_local.py')):
+        app.config.from_pyfile('config_local.py')
+
+    # Flask-Login
+    login_manager = LoginManager()
+    login_manager.login_view = 'main.login'
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Users.query.get(int(user_id))
+
+    # Jinja
+    register_jinja(app)
+
+    # Flask-SQLAlchemy
+    init_db(app)
+
+    # Flask-Mail
+    mail.init_app(app)
+
+    with app.app_context():
+        # Flask-Migrate
+        migrate.init_app(app, db)
+
+        # Register Blueprints
+        register_blueprints(flask_app=app)
 
     return app
